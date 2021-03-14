@@ -19,13 +19,13 @@
         <spring-native.version>0.9.0</spring-native.version>
     </properties>
     <dependencies>
+<!--
 
-        <!--		-->
         <dependency>
             <groupId>org.springframework.retrosocket</groupId>
             <artifactId>spring-retrosocket</artifactId>
             <version>0.0.1-SNAPSHOT</version>
-        </dependency>
+        </dependency>-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-rsocket</artifactId>
@@ -105,9 +105,10 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
-
                 <configuration>
-<!--                    <classifier>exec</classifier>-->
+                    <!--
+                        <classifier>exec</classifier>
+                    -->
                     <excludes>
                         <exclude>
                             <groupId>org.projectlombok</groupId>
@@ -140,6 +141,9 @@
                         </goals>
                     </execution>
                 </executions>
+                <configuration>
+
+                </configuration>
             </plugin>
         </plugins>
     </build>
