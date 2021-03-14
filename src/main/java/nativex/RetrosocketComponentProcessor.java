@@ -24,5 +24,6 @@ public class RetrosocketComponentProcessor implements ComponentProcessor {
 	@Override
 	public void process(NativeContext nativeContext, String s, List<String> list) {
 
+
 	}
 }
