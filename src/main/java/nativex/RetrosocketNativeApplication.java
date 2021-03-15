@@ -16,6 +16,7 @@ import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.rsocket.RSocketRequester;
 import org.springframework.nativex.hint.ProxyHint;
+import org.springframework.nativex.hint.TypeHint;
 import org.springframework.retrosocket.EnableRSocketClients;
 import org.springframework.retrosocket.RSocketClientBuilder;
 import reactor.core.publisher.Mono;
@@ -25,17 +26,24 @@ import reactor.core.publisher.Mono;
 	* Spring Native just yet, so we need to manually register
 	* a client interface using the
 	*/
-@ProxyHint(
+@ProxyHint (
+	types = {
+		GreetingClient.class,
+		org.springframework.aop.SpringProxy.class,
+		org.springframework.aop.framework.Advised.class,
+		org.springframework.core.DecoratingProxy.class
+
+	}
+)
+@TypeHint(
 	typeNames = {
 		"org.springframework.retrosocket.RSocketClientsRegistrar",
 	},
 	types = {
 		Greeting.class,
 		GreetingClient.class,
-		org.springframework.aop.SpringProxy.class,
-		org.springframework.aop.framework.Advised.class,
-		org.springframework.core.DecoratingProxy.class,
-		ReusableMessageFactory.class, DefaultFlowMessageFactory.class
+		ReusableMessageFactory.class,
+		DefaultFlowMessageFactory.class
 	})
 @EnableRSocketClients
 @SpringBootApplication
