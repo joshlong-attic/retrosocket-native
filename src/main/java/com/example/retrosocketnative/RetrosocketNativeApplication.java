@@ -1,6 +1,8 @@
 package com.example.retrosocketnative;
 
 import lombok.SneakyThrows;
+import org.aopalliance.intercept.MethodInterceptor;
+import org.springframework.aop.framework.ProxyFactoryBean;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.AnnotatedBeanDefinition;
 import org.springframework.beans.factory.config.BeanDefinition;
@@ -14,13 +16,11 @@ import org.springframework.context.annotation.ClassPathScanningCandidateComponen
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
-import org.springframework.nativex.hint.AccessBits;
-import org.springframework.nativex.hint.NativeHints;
-import org.springframework.nativex.hint.ProxyHint;
-import org.springframework.nativex.hint.TypeHint;
+import org.springframework.nativex.hint.*;
+import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 import java.lang.annotation.*;
-import java.util.List;
 import java.util.Set;
 
 @TypeHint(typeNames = {"org.springframework.retrosocket.RSocketClientsRegistrar"})
@@ -31,7 +31,10 @@ import java.util.Set;
 	access = AccessBits.ALL
 )
 @TypeHint(types = GreetingClient.class)
-@ProxyHint(types = GreetingClient.class)
+@ProxyHint( types = {
+	GreetingClient.class, org.springframework.aop.SpringProxy.class,
+	org.springframework.aop.framework.Advised.class, org.springframework.core.DecoratingProxy.class
+})
 @SpringBootApplication
 public class RetrosocketNativeApplication {
 
@@ -57,7 +60,6 @@ public class RetrosocketNativeApplication {
 		return scanner;
 	}
 
-
 	@Bean
 	ApplicationListener<ApplicationReadyEvent> ready(ResourceLoader rl, Environment env, BeanFactory bf) {
 		return event -> {
@@ -65,11 +67,37 @@ public class RetrosocketNativeApplication {
 			var packages = AutoConfigurationPackages.get(bf);
 			System.out.println("there are " + packages.size() + " package(s): " + packages);
 			packages.forEach(pkg -> process(scanner.findCandidateComponents(pkg)));
+			GreetingClient gc = buildProxy(GreetingClient.class, bf);
+			var reply = gc.greet("josh");
+			System.out.println("greeting is: " + reply);
 		};
 	}
 
 	private void process(Set<BeanDefinition> definitions) {
 		definitions.forEach(bd -> System.out.println("the bean definition is " + bd.getBeanClassName() + '.'));
+	}
+
+	private static <T> T buildProxy(Class<T> iface, BeanFactory factory) {
+		var pfb = new ProxyFactoryBean();
+		pfb.setBeanFactory(factory);
+		pfb.addInterface(iface);
+		pfb.addAdvice((MethodInterceptor) methodInvocation -> {
+			if (methodInvocation.getMethod().getName().contains("greet")) {
+				System.out.println("arguments: " + StringUtils
+					.arrayToCommaDelimitedString(methodInvocation.getArguments()));
+				Assert.state(methodInvocation.getArguments()[0] instanceof String, () -> "the first parameter, name, should be a String");
+				return doGreet((String) methodInvocation.getArguments()[0]);
+			}
+			return methodInvocation.proceed();
+		});
+
+		pfb.setTargetClass(iface);
+		pfb.setTargetClass(iface);
+		return (T) pfb.getObject();
+	}
+
+	private static String doGreet(String name) {
+		return name.toUpperCase();
 	}
 
 }
