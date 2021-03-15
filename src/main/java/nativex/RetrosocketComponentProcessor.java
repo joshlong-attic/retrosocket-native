@@ -10,7 +10,7 @@ import java.util.List;
 	* we need to register any interface that has {@code @RSocketClient} on it.
 	*/
 @Log4j2
-public class RetrosocketComponentProcessor implements ComponentProcessor {
+class RetrosocketComponentProcessor implements ComponentProcessor {
 
 	@Override
 	public boolean handle(NativeContext nativeContext, String className, List<String> list) {

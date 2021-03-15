@@ -83,7 +83,7 @@
                         <configuration>
                             <!-- The native image build needs to know the entry point to your application -->
                             <mainClass>
-                com.example.retrosocketnative.RetrosocketNativeApplication
+                                nativex.RetrosocketNativeApplication
                             </mainClass>
                         </configuration>
                         <executions>
