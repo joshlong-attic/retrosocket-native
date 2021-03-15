@@ -1,26 +1,33 @@
 package com.example.retrosocketnative;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.springframework.aop.framework.ProxyFactoryBean;
 import org.springframework.beans.factory.BeanFactory;
-import org.springframework.beans.factory.annotation.AnnotatedBeanDefinition;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.AutoConfigurationPackages;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.ResourceLoader;
-import org.springframework.core.type.filter.AnnotationTypeFilter;
-import org.springframework.nativex.hint.*;
+import org.springframework.messaging.handler.annotation.DestinationVariable;
+import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.rsocket.RSocketRequester;
+import org.springframework.nativex.hint.AccessBits;
+import org.springframework.nativex.hint.ProxyHint;
+import org.springframework.nativex.hint.TypeHint;
+import org.springframework.retrosocket.EnableRSocketClients;
+import org.springframework.retrosocket.PublicRSocketClientBuilder;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
+import reactor.core.publisher.Mono;
 
-import java.lang.annotation.*;
 import java.util.Set;
 
 @TypeHint(typeNames = {"org.springframework.retrosocket.RSocketClientsRegistrar"})
@@ -30,11 +37,12 @@ import java.util.Set;
 },
 	access = AccessBits.ALL
 )
-@TypeHint(types = GreetingClient.class)
-@ProxyHint( types = {
-	GreetingClient.class, org.springframework.aop.SpringProxy.class,
+@TypeHint(types = {Greeting.class, RSocketGreetingClient.class /* GreetingClient.class */})
+@ProxyHint(types = {
+	RSocketGreetingClient.class, /* GreetingClient.class, */ org.springframework.aop.SpringProxy.class,
 	org.springframework.aop.framework.Advised.class, org.springframework.core.DecoratingProxy.class
 })
+@EnableRSocketClients
 @SpringBootApplication
 public class RetrosocketNativeApplication {
 
@@ -44,6 +52,7 @@ public class RetrosocketNativeApplication {
 		Thread.sleep(10_000);
 	}
 
+/*
 	private ClassPathScanningCandidateComponentProvider buildScanner(
 		ResourceLoader rl,
 		Environment environment) {
@@ -59,17 +68,24 @@ public class RetrosocketNativeApplication {
 		scanner.setResourceLoader(rl);
 		return scanner;
 	}
+*/
 
 	@Bean
-	ApplicationListener<ApplicationReadyEvent> ready(ResourceLoader rl, Environment env, BeanFactory bf) {
+	ApplicationListener<ApplicationReadyEvent> ready(
+		RSocketGreetingClient rgc,
+		ResourceLoader rl, Environment env, BeanFactory bf) {
 		return event -> {
-			var scanner = buildScanner(rl, env);
-			var packages = AutoConfigurationPackages.get(bf);
-			System.out.println("there are " + packages.size() + " package(s): " + packages);
-			packages.forEach(pkg -> process(scanner.findCandidateComponents(pkg)));
-			GreetingClient gc = buildProxy(GreetingClient.class, bf);
+
+			Mono<Greeting> greet = rgc.greet("Spring fans!");
+			greet.subscribe(gr -> System.out.println("response: " + gr.toString()));
+//
+//			var scanner = buildScanner(rl, env);
+//			var packages = AutoConfigurationPackages.get(bf);
+//			System.out.println("there are " + packages.size() + " package(s): " + packages);
+//			packages.forEach(pkg -> process(scanner.findCandidateComponents(pkg)));
+/*			GreetingClient gc = buildProxy(GreetingClient.class, bf);
 			var reply = gc.greet("josh");
-			System.out.println("greeting is: " + reply);
+			System.out.println("greeting is: " + reply);*/
 		};
 	}
 
@@ -90,7 +106,6 @@ public class RetrosocketNativeApplication {
 			}
 			return methodInvocation.proceed();
 		});
-
 		pfb.setTargetClass(iface);
 		pfb.setTargetClass(iface);
 		return (T) pfb.getObject();
@@ -100,20 +115,47 @@ public class RetrosocketNativeApplication {
 		return name.toUpperCase();
 	}
 
+	@Bean
+	RSocketRequester rSocketRequester(
+		@Value("${service.host:localhost}") String host,
+		RSocketRequester.Builder builder) {
+		return builder.tcp(host, 8181);
+	}
+
+	@Bean
+	RSocketGreetingClient greetingClient(RSocketRequester rsr) {
+		var rcfb = new PublicRSocketClientBuilder();
+		return rcfb.buildClientFor(RSocketGreetingClient.class, rsr);
+	}
+
 }
 
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+class Greeting {
+	private String message;
+}
+
+/*
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
 @interface MyClient {
 }
+*/
 
+interface RSocketGreetingClient {
+
+	@MessageMapping("greeting.{name}")
+	Mono<Greeting> greet(@DestinationVariable String name);
+}
+/*
 @MyClient
 interface GreetingClient {
-
 	String greet(String name);
-}
+}*/
 
 /*
 

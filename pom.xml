@@ -19,13 +19,13 @@
         <spring-native.version>0.9.0</spring-native.version>
     </properties>
     <dependencies>
-<!--
+
 
         <dependency>
             <groupId>org.springframework.retrosocket</groupId>
             <artifactId>spring-retrosocket</artifactId>
             <version>0.0.1-SNAPSHOT</version>
-        </dependency>-->
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-rsocket</artifactId>
