@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-mvn -DskipTests=true clean spring-boot:build-image
+mvn -X -DskipTests=true clean spring-boot:build-image | tee ~/Desktop/output.txt

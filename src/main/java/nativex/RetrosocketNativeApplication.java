@@ -16,9 +16,12 @@ import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.rsocket.RSocketRequester;
 import org.springframework.nativex.hint.ProxyHint;
+import org.springframework.nativex.hint.ResourceHint;
 import org.springframework.nativex.hint.TypeHint;
 import org.springframework.retrosocket.EnableRSocketClients;
-import org.springframework.retrosocket.RSocketClientBuilder;
+import org.springframework.retrosocket.RSocketClient;
+import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Indexed;
 import reactor.core.publisher.Mono;
 
 /**
@@ -26,13 +29,12 @@ import reactor.core.publisher.Mono;
 	* Spring Native just yet, so we need to manually register
 	* a client interface using the
 	*/
-@ProxyHint (
+@ProxyHint(
 	types = {
 		GreetingClient.class,
 		org.springframework.aop.SpringProxy.class,
 		org.springframework.aop.framework.Advised.class,
 		org.springframework.core.DecoratingProxy.class
-
 	}
 )
 @TypeHint(
@@ -45,6 +47,7 @@ import reactor.core.publisher.Mono;
 		ReusableMessageFactory.class,
 		DefaultFlowMessageFactory.class
 	})
+@ResourceHint (patterns = "nativex/GreetingClient.class")
 @EnableRSocketClients
 @SpringBootApplication
 public class RetrosocketNativeApplication {
@@ -70,11 +73,13 @@ public class RetrosocketNativeApplication {
 		return builder.tcp(host, 8181);
 	}
 
+/*
 	@Bean
 	GreetingClient greetingClient(RSocketRequester rsr) {
 		var rcfb = new RSocketClientBuilder();
 		return rcfb.buildClientFor(GreetingClient.class, rsr);
 	}
+*/
 
 }
 
@@ -86,6 +91,7 @@ class Greeting {
 }
 
 
+@RSocketClient
 interface GreetingClient {
 
 	@MessageMapping("greeting.{name}")
