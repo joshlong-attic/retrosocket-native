@@ -19,7 +19,7 @@ import org.springframework.retrosocket.EnableRSocketClients;
 import org.springframework.retrosocket.RSocketClient;
 import reactor.core.publisher.Mono;
 
-@TypeHint(types = Greeting.class, access = AccessBits.ALL)
+//@TypeHint(types = Greeting.class, access = AccessBits.ALL)
 @EnableRSocketClients
 @SpringBootApplication
 public class RetrosocketNativeApplication {
@@ -33,8 +33,11 @@ public class RetrosocketNativeApplication {
 	@Bean
 	ApplicationListener<ApplicationReadyEvent> ready(GreetingClient rgc) {
 		return event -> {
-			Mono<Greeting> greet = rgc.greet("Spring fans!");
+			Mono<Greeting> greet = rgc.greet("Spring fans");
 			greet.subscribe(gr -> System.out.println("response: " + gr.toString()));
+			rgc
+				.greetWithoutWrapper("RSocket fans")
+				.subscribe(gr -> System.out.println("response: " + gr.toString()));
 		};
 	}
 
@@ -56,6 +59,9 @@ class Greeting {
 
 @RSocketClient
 interface GreetingClient {
+
+	@MessageMapping("greeting.{name}")
+	Mono<Greeting> greetWithoutWrapper(@DestinationVariable String name);
 
 	@MessageMapping("greeting.{name}")
 	Mono<Greeting> greet(@DestinationVariable String name);
