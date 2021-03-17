@@ -72,15 +72,6 @@ public class RetrosocketNativeApplication {
 		RSocketRequester.Builder builder) {
 		return builder.tcp(host, 8181);
 	}
-
-/*
-	@Bean
-	GreetingClient greetingClient(RSocketRequester rsr) {
-		var rcfb = new RSocketClientBuilder();
-		return rcfb.buildClientFor(GreetingClient.class, rsr);
-	}
-*/
-
 }
 
 @Data
