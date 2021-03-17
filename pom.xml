@@ -16,19 +16,18 @@
     <description>Demo project for Spring Boot</description>
     <properties>
         <java.version>11</java.version>
+        <retrosocket.version>0.0.1-SNAPSHOT</retrosocket.version>
         <spring-native.version>0.9.0</spring-native.version>
     </properties>
     <dependencies>
-
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-context-indexer</artifactId>
         </dependency>
-
         <dependency>
             <groupId>org.springframework.retrosocket</groupId>
             <artifactId>spring-retrosocket</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>${retrosocket.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -38,7 +37,6 @@
             <groupId>org.springframework.experimental</groupId>
             <artifactId>spring-aot</artifactId>
             <version>${spring-native.version}</version>
-
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -66,53 +64,12 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-
-    <profiles>
-        <!--
-            make sure to uncomment the qualifier in the spring-boot
-            Apache Maven plugin if u want to use this
-
-
-
-
-        -->
-        <profile>
-            <id>native-image</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.graalvm.nativeimage</groupId>
-                        <artifactId>native-image-maven-plugin</artifactId>
-                        <version>21.0.0</version>
-                        <configuration>
-                            <!-- The native image build needs to know the entry point to your application -->
-                            <mainClass>
-                                nativex.RetrosocketNativeApplication
-                            </mainClass>
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <goals>
-                                    <goal>native-image</goal>
-                                </goals>
-                                <phase>package</phase>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
     <build>
-
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
-                    <!--
-                        <classifier>exec</classifier>
-                    -->
                     <excludes>
                         <exclude>
                             <groupId>org.projectlombok</groupId>
@@ -131,6 +88,13 @@
                 <groupId>org.springframework.experimental</groupId>
                 <artifactId>spring-aot-maven-plugin</artifactId>
                 <version>${spring-native.version}</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.springframework.retrosocket</groupId>
+                        <artifactId>spring-retrosocket-native</artifactId>
+                        <version>${retrosocket.version}</version>
+                    </dependency>
+                </dependencies>
                 <executions>
                     <execution>
                         <id>test-generate</id>

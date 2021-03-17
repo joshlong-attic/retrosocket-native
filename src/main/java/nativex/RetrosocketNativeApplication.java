@@ -4,8 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
-import org.apache.logging.log4j.message.DefaultFlowMessageFactory;
-import org.apache.logging.log4j.message.ReusableMessageFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -15,39 +13,14 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.rsocket.RSocketRequester;
-import org.springframework.nativex.hint.ProxyHint;
-import org.springframework.nativex.hint.ResourceHint;
+import org.springframework.nativex.hint.AccessBits;
 import org.springframework.nativex.hint.TypeHint;
 import org.springframework.retrosocket.EnableRSocketClients;
 import org.springframework.retrosocket.RSocketClient;
-import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Indexed;
 import reactor.core.publisher.Mono;
 
-/**
-	* The custom component scanning doesn't quite work with
-	* Spring Native just yet, so we need to manually register
-	* a client interface using the
-	*/
-@ProxyHint(
-	types = {
-		GreetingClient.class,
-		org.springframework.aop.SpringProxy.class,
-		org.springframework.aop.framework.Advised.class,
-		org.springframework.core.DecoratingProxy.class
-	}
-)
-@TypeHint(
-	typeNames = {
-		"org.springframework.retrosocket.RSocketClientsRegistrar",
-	},
-	types = {
-		Greeting.class,
-		GreetingClient.class,
-		ReusableMessageFactory.class,
-		DefaultFlowMessageFactory.class
-	})
-@ResourceHint (patterns = "nativex/GreetingClient.class")
+// todo is this required?
+@TypeHint(types = Greeting.class, access = AccessBits.ALL)
 @EnableRSocketClients
 @SpringBootApplication
 public class RetrosocketNativeApplication {
