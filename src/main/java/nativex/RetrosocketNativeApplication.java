@@ -19,7 +19,6 @@ import org.springframework.retrosocket.EnableRSocketClients;
 import org.springframework.retrosocket.RSocketClient;
 import reactor.core.publisher.Mono;
 
-// todo is this required?
 @TypeHint(types = Greeting.class, access = AccessBits.ALL)
 @EnableRSocketClients
 @SpringBootApplication
